@@ -1,0 +1,36 @@
+library(readxl)
+library(graphics)
+
+setwd("C:/Dev/_INSPER/Eco_Av/Aula07")
+
+
+data <- read_excel("aula07_exercicio01.xlsx")
+data <- ts(data, frequency = 12, start = c(1994, 8))
+
+trend <- lm(Y ~ OBS, data = data)
+summary(trend)
+
+a <- trend$residuals
+plot(a)
+
+cf <- acf(a)
+acf <- pacf(a)
+
+fit <- arima(a, order = c(1, 0, 0))
+
+acf(fit$residuals)
+pacf(fit$residuals)
+
+
+data <- read_excel("aula07_exercicio01.xlsx")
+data <- ts(data$Y, frequency = 12, start = c(1994, 8))
+
+cf <- acf(a)
+acf <- pacf(a)
+
+fit2 <- arima(data, 
+              order = c(1, 0, 0),
+              xreg = 1:320);fit2
+tsdiag(fit2)
+
+AIC(fit2)
