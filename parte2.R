@@ -4,6 +4,7 @@ library(forecast)
 library(mFilter)
 library(modelsummary)
 library(lmtest)
+library(ggplot2)
 
 ### Series Temporais ----
 
@@ -28,9 +29,32 @@ ipca <- ts(ipca$Value, start = c(2003, 1), frequency = 12)
 # Tendencia linear
 fit <- tslm(ibc ~ trend)
 modelsummary(list("(2.1)" = fit), stars = c("*" = .1, "**" = .05, "***" = .01), gof_map = c("nobs", "r.squared"))
-acf(residuals(fit))
-pacf(residuals(fit))
-plot(residuals(fit))
+acf(residuals(fit), plot = F)$acf %>% 
+  as.data.frame.table() %>% 
+  rowid_to_column("index") %>% 
+  mutate(index = index - 1) %>% 
+  ggplot(aes(x =  fct_reorder(factor(index), -index), y = Freq)) +
+    geom_col() +
+    coord_flip() +
+    theme_bw() +
+    labs(x = "Lags", y = "FAC")
+  
+pacf(residuals(fit), plot = F)$acf %>% 
+  as.data.frame.table() %>% 
+  rowid_to_column("index") %>% 
+  mutate(index = index - 1) %>% 
+  ggplot(aes(x =  fct_reorder(factor(index), -index), y = Freq)) +
+  geom_col() +
+  coord_flip() +
+  theme_bw() +
+  labs(x = "Lags", y = "FACP")
+
+data.frame(Y=as.matrix(residuals(fit)), date=time(residuals(fit))) %>% 
+  ggplot() +
+    geom_line(aes(x = date, y = Y), lwd = 0.75, color = "dodgerblue4", alpha = .75) +
+    theme_bw() +
+    geom_hline(yintercept = 0, linetype = "dashed")
+    labs(y = "Resíduos", x = "Data") 
 
 data <- tibble(
   month = as.numeric(time(ibc)),
